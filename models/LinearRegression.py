@@ -16,28 +16,23 @@ import numpy as np
 
 class LinearRegression:
     coefficients: List[float] = None
-    X: pd.DataFrame = None
-    y: pd.Series = None
     prev_loss: float = None
 
     def MSE(self, X: pd.DataFrame, y: pd.Series):
         y_pred = self.coefficients[0] * X + self.coefficients[1]
         mse = ((y - y_pred) ** 2).mean()
-
         return mse
 
     def compute_gradients(self, *, X: pd.DataFrame, y: pd.Series):
         y_pred = self.coefficients[0] * X + self.coefficients[1]
         slope_gradient = -2 * (X * (y - y_pred)).mean()
         intercept_gradient = -2 * (y - y_pred).mean()
-
         return (slope_gradient, intercept_gradient)
 
     def fit(self, *, X: pd.DataFrame, y: pd.Series, learning_rate: float, max_iter: int = 50000, tol: float = 1e-3):
         # Initialize the coefficients list 
         num_features = 2
         self.coefficients = [0] * num_features
-        
         
         for i in range(max_iter):
             # Calculate MSE 
