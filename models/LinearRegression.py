@@ -1,7 +1,7 @@
 """
 An ordinary least-squares linear regression model.
 
-LinearRegression fits a linear model with coefficients w = (w1, …, wp) to minimize 
+LinearRegression fits a linear model of the form y=mx+b to minimize 
 the residual sum of squares between the observed targets in the dataset, and the 
 targets predicted by the linear approximation. 
 
