@@ -62,7 +62,6 @@ if __name__ == "__main__":
     
     model.fit(X=data['Experience Years'], y=data['Salary'], learning_rate=1e-3)
     print(f'y = {model.coefficients[0]} x + {model.coefficients[1]}')
-
     plt.scatter(data['Experience Years'], data['Salary'], label='Data')
     x_range = [data['Experience Years'].min(), data['Experience Years'].max()]
     y_pred = [model.predict(x) for x in x_range]
