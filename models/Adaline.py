@@ -39,8 +39,6 @@ class Adaline:
             self.weights -= learning_rate * np.array(delta_w)
             self.bias -= learning_rate * delta_b
 
-        print(self.weights, self.bias)
-
     def predict(self, X_i: pd.Series):
         y_hat = self.threshold(activation=self.activation(z=self.net_input(X=X_i)))
         return y_hat
@@ -54,7 +52,6 @@ if __name__ == '__main__':
 
     # Features: drop species and the other columns
     X = dataset.drop(columns=['species', 'sepal_width', 'petal_width'], axis=1)
-    # X = (X - X.mean()) / X.std()
 
     # Labels: 1 if setosa, 0 otherwise
     y = (dataset['species'] == 'setosa').astype(int)
