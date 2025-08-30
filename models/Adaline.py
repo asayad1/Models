@@ -15,7 +15,7 @@ class Adaline:
     def threshold(self, *, activation: float):
         return 1 if activation >= 0.5 else 0
 
-    def fit(self, *, X: pd.DataFrame, y: pd.Series, learning_rate: float, iterations: int = 50000):
+    def fit(self, *, X: pd.DataFrame, y: pd.Series, learning_rate: float, iterations: int = 1000):
         self.weights = np.full(X.shape[1], 0.01)
         self.bias = 0.01
 
@@ -63,23 +63,31 @@ if __name__ == '__main__':
     model = Adaline()
     model.fit(X=X, y=y, learning_rate=1e-3)
 
-    # Scatter plot
-    plt.figure(figsize=(8, 6))
+    # Create mesh grid
+    x_min, x_max = X.iloc[:, 0].min() - 1, X.iloc[:, 0].max() + 1
+    y_min, y_max = X.iloc[:, 1].min() - 1, X.iloc[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300),
+                         np.linspace(y_min, y_max, 300))
+
+    # Predict for each grid point
+    grid_points = np.c_[xx.ravel(), yy.ravel()]
+    Z = []
+    for point in grid_points:
+        Z.append(model.threshold(activation=model.activation(z=model.net_input(X=point))))
+    Z = np.array(Z).reshape(xx.shape)
+
+    # Plot filled decision regions
+    plt.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.bwr)
+
+    # Plot training points
     plt.scatter(
-        X["sepal_length"], X["petal_length"],
-        c=['blue' if label == 1 else 'red' for label in y],
-        edgecolors="k"
+        X.iloc[:, 0], X.iloc[:, 1],
+        c=['red' if label == 1 else 'blue' for label in y],
+        edgecolor='k',
+        marker='o'
     )
 
-    # Plot decision boundary: w1*x1 + w2*x2 + b = 0 → x2 = -(w1/w2)*x1 - b/w2
-    x_vals = np.linspace(X["sepal_length"].min(), X["sepal_length"].max(), 100)
-    w1, w2 = model.weights
-    b = model.bias
-    y_vals = -(w1 / w2) * x_vals - (b / w2)
-
-    plt.plot(x_vals, y_vals, 'k--', label="Decision boundary")
-    plt.xlabel("sepal_length")
-    plt.ylabel("petal_length")
-    plt.legend()
-    plt.title("Adaline Decision Boundary on Iris Dataset")
+    plt.xlabel("Sepal length [cm]")
+    plt.ylabel("Petal length [cm]")
+    plt.title("Adaline Decision Regions")
     plt.show()
