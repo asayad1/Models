@@ -1,3 +1,8 @@
+"""
+This implements Adaline using the least mean squares (LMS) rule with a
+linear activation function. Training is done on the Iris dataset.
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
