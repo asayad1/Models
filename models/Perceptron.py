@@ -1,6 +1,8 @@
 """
-This implements a classic Perceptron using the perceptron update rule with a
-unit step activation function. Training is done on the Iris dataset.
+This implements a classic Perceptron binary classifier using the perceptron update rule with a
+unit step activation function. Training is done on the Iris dataset. 
+
+Training supports learning multiple weights.
 """
 
 import pandas as pd 
@@ -13,8 +15,11 @@ class Perceptron:
     bias: float = None 
     errors: List[int] = None
 
-    def activation(self, activity: float):
-        return 1 if activity >= 0 else 0 
+    def net_input(self, *, X: np.ndarray):
+        return X.dot(self.weights) + self.bias
+
+    def threshold(self, *, activation: float):
+        return 1 if activation >= 0 else 0
 
     def fit(self, *, X: pd.DataFrame, y: pd.Series, learning_rate: float, epochs: int):
         # Initialize the weights and bias to 0 
@@ -37,10 +42,8 @@ class Perceptron:
             # See if we have converged early
             if not (1 in self.errors): break 
 
-    def predict(self, X: pd.Series) -> float:
-        activity = X.dot(self.weights) + self.bias
-        y_prediction = self.activation(activity)
-        return y_prediction
+    def predict(self, X_i: pd.Series) -> float:
+        return self.threshold(activation=self.net_input(X=X_i))
     
 
 
@@ -71,8 +74,8 @@ if __name__ == '__main__':
     grid_points = np.c_[xx.ravel(), yy.ravel()]
     Z = []
     for point in grid_points:
-        activity = np.dot(p.weights, point) + p.bias
-        Z.append(p.activation(activity))
+        Z.append(p.predict(X_i=point))
+
     Z = np.array(Z).reshape(xx.shape)
 
     # Plot filled decision regions
