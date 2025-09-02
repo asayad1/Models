@@ -10,6 +10,12 @@ import matplotlib.pyplot as plt
 class Adaline:
     weights: pd.Series
     bias: float
+    epochs: int
+    learning_rate: float 
+
+    def __init__(self, *, learning_rate: float, epochs: int):
+        self.learning_rate = learning_rate
+        self.epochs = epochs
 
     def net_input(self, *, X: np.ndarray):
         return X.dot(self.weights) + self.bias
@@ -20,11 +26,11 @@ class Adaline:
     def threshold(self, *, activation: float):
         return 1 if activation >= 0.5 else 0
 
-    def fit(self, *, X: pd.DataFrame, y: pd.Series, learning_rate: float, iterations: int = 1000):
+    def fit(self, *, X: pd.DataFrame, y: pd.Series):
         self.weights = np.full(X.shape[1], 0.01)
         self.bias = 0.01
 
-        for _ in range(iterations):
+        for _ in range(self.epochs):
             delta_w = []
             delta_b = 0
             for X_i, y_i in zip(X.values, y):
@@ -41,12 +47,17 @@ class Adaline:
             delta_b = -2 / X.shape[0] * delta_b
             
             # Apply weight updates
-            self.weights -= learning_rate * np.array(delta_w)
-            self.bias -= learning_rate * delta_b
+            self.weights -= self.learning_rate * np.array(delta_w)
+            self.bias -= self.learning_rate * delta_b
 
-    def predict(self, X_i: pd.Series):
-        y_hat = self.threshold(activation=self.activation(z=self.net_input(X=X_i)))
-        return y_hat
+    def predict(self, X_i: pd.Series, *, with_activation: bool = False) -> float:
+        activation = self.activation(z=self.net_input(X=X_i))
+
+        if not with_activation:
+            return self.threshold(activation=activation)
+        else:
+            return (activation, self.threshold(activation=activation))
+
 
 if __name__ == '__main__':
     dataset_url = 'https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv'
@@ -62,8 +73,8 @@ if __name__ == '__main__':
     y = (dataset['species'] == 'setosa').astype(int)
 
     # Define the model
-    model = Adaline()
-    model.fit(X=X, y=y, learning_rate=1e-3)
+    model = Adaline(learning_rate=1e-3, epochs=1000)
+    model.fit(X=X, y=y)
 
     # Create mesh grid
     x_min, x_max = X.iloc[:, 0].min() - 1, X.iloc[:, 0].max() + 1

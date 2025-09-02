@@ -14,19 +14,28 @@ class Perceptron:
     weights: pd.Series = None
     bias: float = None 
     errors: List[int] = None
+    epochs: int
+    learning_rate: float 
+
+    def __init__(self, *, learning_rate: float, epochs: int):
+        self.learning_rate = learning_rate
+        self.epochs = epochs
 
     def net_input(self, *, X: np.ndarray):
         return X.dot(self.weights) + self.bias
 
+    def activation(self, *, z: float):
+        return z
+
     def threshold(self, *, activation: float):
         return 1 if activation >= 0 else 0
 
-    def fit(self, *, X: pd.DataFrame, y: pd.Series, learning_rate: float, epochs: int):
+    def fit(self, *, X: pd.DataFrame, y: pd.Series):
         # Initialize the weights and bias to 0 
         self.weights = pd.Series(0.0, index=X.columns)
         self.bias = 0
         
-        for _ in range(epochs):
+        for _ in range(self.epochs):
             # For each training example:
             # 1) Compute the output value: w1 x1 + w2 x2 + .. + wn xn + b
             # 2) Update the weights and bias unit
@@ -35,16 +44,20 @@ class Perceptron:
             for i in range(X.shape[0]):
                 y_prediction = self.predict(X.iloc[i])
                 error = y[i] - y_prediction
-                self.weights += learning_rate * error * X.iloc[i]
-                self.bias += learning_rate * error
+                self.weights += self.learning_rate * error * X.iloc[i]
+                self.bias += self.learning_rate * error
                 self.errors.append(abs(error))
             
             # See if we have converged early
             if not (1 in self.errors): break 
 
-    def predict(self, X_i: pd.Series) -> float:
-        return self.threshold(activation=self.net_input(X=X_i))
-    
+    def predict(self, X_i: pd.Series, *, with_activation: bool = False) -> float:
+        activation = self.activation(z=self.net_input(X=X_i))
+
+        if not with_activation:
+            return self.threshold(activation=activation)
+        else:
+            return (activation, self.threshold(activation=activation))
 
 
 if __name__ == '__main__':
@@ -61,8 +74,8 @@ if __name__ == '__main__':
     y = (dataset['species'] == 'setosa').astype(int)
 
     # Train perceptron
-    p = Perceptron()
-    p.fit(X=X, y=y, learning_rate=1, epochs=500)
+    p = Perceptron(learning_rate=1e-2, epochs=500)
+    p.fit(X=X, y=y)
 
     # Create mesh grid
     x_min, x_max = X.iloc[:, 0].min() - 1, X.iloc[:, 0].max() + 1
