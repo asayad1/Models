@@ -8,11 +8,12 @@ In OvO, a classifier is trained for every pair of classes.
 """
 
 import pandas as pd
+import numpy as np 
+from itertools import combinations
 from Perceptron import Perceptron
 from Adaline import Adaline
-import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-import numpy as np 
+import matplotlib.pyplot as plt
 
 class MultiClass:
     model = None            # The binary classifer we are using
@@ -36,17 +37,24 @@ class MultiClass:
         else:
             raise ValueError("Strategy is not OvA or OvO!")
     
-        # Determine the number of classifiers to create
-        self.classifiers = {label: model(epochs=self.epochs, learning_rate=self.learning_rate) for label in set(self.y)}
-
     def OvA(self):
+        # Determine the number of classifiers to create
+        self.classifiers = {label: self.model(epochs=self.epochs, learning_rate=self.learning_rate) for label in set(self.y)}
         for label in set(self.y):
             y = (self.y == label).astype(int)            
             self.classifiers[label].fit(X=self.X, y=y)
 
     def OvO(self):
-        """TODO: OvO multiclass"""
-        pass
+        # Determine the number of classifiers to create
+        self.classifiers = {} 
+        for combo in combinations(set(self.y), r=2):    #? In OvO there are k * (k - 1) / 2 classifiers
+            mask = self.y.isin(combo)
+            X_filtered = self.X[mask]
+            y_filtered = (self.y[mask] == combo[0]).astype(int) #! Our positive is the first item in the combination.
+
+            # Train the classifier
+            self.classifiers[combo] = self.model(epochs=self.epochs, learning_rate=self.learning_rate)
+            self.classifiers[combo].fit(X=X_filtered, y=y_filtered)
 
     def fit(self):
         if self.strategy == 'ova':
@@ -55,8 +63,39 @@ class MultiClass:
             self.OvO()
 
     def predict(self, X_i: pd.Series):
-        predictions = {label: self.classifiers[label].predict(X_i, with_score=True) for label in self.classifiers}    
-        return max(predictions, key=predictions.get)
+        if self.strategy == 'ova':
+            # In OvA, we simply pick the label with the highest score
+            predictions = {label: self.classifiers[label].predict(X_i, with_score=True) for label in self.classifiers}    
+            return max(predictions, key=predictions.get)
+        else:
+            # In OvO, we count votes amongst classifiers. If there is a tie, we use the score to tie-break.
+            predictions = {label: self.classifiers[label].predict(X_i, with_score=True) for label in self.classifiers}
+            votes = {}
+            for combo, pred in zip(predictions.keys(), predictions.values()):
+                # If our prediction is 1, then the vote is for the first item in the tuple
+                # If our prediction is 0, then the vote is for the second item in the tuple
+                voted_label = combo[0] if pred[1] == 1 else combo[1]
+
+                # Initialize the list of a vote that hasnt been counted before        
+                if voted_label not in votes:
+                    votes[voted_label] = []
+                
+                votes[voted_label].append(pred)
+            
+            # Determine if we have a tie
+            sorted_votes = sorted(votes.items(), key=lambda x: len(x[1]), reverse=True)
+            most_votes = len(sorted_votes[0][1])
+            top_labels = [label for label, preds in sorted_votes if len(preds) == most_votes]
+            
+            if len(top_labels) > 1:
+                # We look for maximum confidence
+                tie_break_scores = {
+                    label: sum(pred[0] for pred in votes[label]) / len(votes[label])
+                    for label in top_labels
+                }
+                return max(tie_break_scores, key=tie_break_scores.get)
+            else:
+                return top_labels.pop()
 
 if __name__ == '__main__':
     # Load Iris
@@ -73,10 +112,12 @@ if __name__ == '__main__':
     stds = X.std(ddof=0)
     X_std = (X - means) / stds
 
-    # Train OvA
-    model = MultiClass(model=Adaline, strategy='OvA', X=X_std, y=y, epochs=10000, learning_rate=1e-2)
+    strat = 'ovo'
+    
+    # Train multiclass
+    model = MultiClass(model=Perceptron, strategy=strat, X=X_std, y=y, epochs=1000, learning_rate=1e-2)
     model.fit()
-
+    model.predict(X_i=pd.Series([4.6, 1.0], index=feat_cols))
 
     # Decision region grid
     x1_min, x1_max = X_std[feat_cols[0]].min() - 1.0, X_std[feat_cols[0]].max() + 1.0
@@ -122,6 +163,6 @@ if __name__ == '__main__':
     plt.xlabel(f'{feat_cols[0]} [standardized]')
     plt.ylabel(f'{feat_cols[1]} [standardized]')
     plt.legend(loc='upper left', framealpha=0.95)
-    plt.title('OvA decision regions (Adaline)')
+    plt.title(f'{strat} decision regions {model.model}')
     plt.tight_layout()
     plt.show()
