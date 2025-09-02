@@ -45,6 +45,7 @@ class MultiClass:
             self.classifiers[label].fit(X=self.X, y=y)
 
     def OvO(self):
+        """TODO: OvO multiclass"""
         pass
 
     def fit(self):
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     X_std = (X - means) / stds
 
     # Train OvA
-    model = MultiClass(model=Adaline, strategy='OvA', X=X_std, y=y, epochs=10000, learning_rate=1e-2)
+    model = MultiClass(model=Perceptron, strategy='OvA', X=X_std, y=y, epochs=500, learning_rate=1e-2)
     model.fit()
 
 
