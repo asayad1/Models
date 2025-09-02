@@ -24,11 +24,11 @@ class Perceptron:
     def net_input(self, *, X: np.ndarray):
         return X.dot(self.weights) + self.bias
 
-    def activation(self, *, z: float):
-        return z
+    def threshold(self, *, net_input: float):
+        return 1 if net_input >= 0 else 0
 
-    def threshold(self, *, activation: float):
-        return 1 if activation >= 0 else 0
+    def score(self, *, X: np.ndarray):
+        return self.net_input(X=X)
 
     def fit(self, *, X: pd.DataFrame, y: pd.Series):
         # Initialize the weights and bias to 0 
@@ -51,13 +51,13 @@ class Perceptron:
             # See if we have converged early
             if not (1 in self.errors): break 
 
-    def predict(self, X_i: pd.Series, *, with_activation: bool = False) -> float:
-        activation = self.activation(z=self.net_input(X=X_i))
+    def predict(self, X_i: pd.Series, *, with_score: bool = False) -> float:
+        score = self.score(X=X_i)
 
-        if not with_activation:
-            return self.threshold(activation=activation)
+        if not with_score:
+            return self.threshold(net_input=score)
         else:
-            return (activation, self.threshold(activation=activation))
+            return (score, self.threshold(net_input=score))
 
 
 if __name__ == '__main__':

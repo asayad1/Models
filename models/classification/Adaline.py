@@ -26,6 +26,9 @@ class Adaline:
     def threshold(self, *, activation: float):
         return 1 if activation >= 0.5 else 0
 
+    def score(self, X):
+        return self.activation(z=self.net_input(X=X))
+
     def fit(self, *, X: pd.DataFrame, y: pd.Series):
         self.weights = np.full(X.shape[1], 0.01)
         self.bias = 0.01
@@ -50,13 +53,13 @@ class Adaline:
             self.weights -= self.learning_rate * np.array(delta_w)
             self.bias -= self.learning_rate * delta_b
 
-    def predict(self, X_i: pd.Series, *, with_activation: bool = False) -> float:
-        activation = self.activation(z=self.net_input(X=X_i))
+    def predict(self, X_i: pd.Series, *, with_score: bool = False) -> float:
+        score = self.score(X=X_i)
 
-        if not with_activation:
-            return self.threshold(activation=activation)
+        if not with_score:
+            return self.threshold(activation=score)
         else:
-            return (activation, self.threshold(activation=activation))
+            return (score, self.threshold(activation=score))
 
 
 if __name__ == '__main__':

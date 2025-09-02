@@ -1,7 +1,7 @@
 """
 This file implements an abstract multi-class classifier from binary classifiers.
 
-Strategies include: One-Versus-All/Rest (OvA/Ovr), OvO (One-Versus-One).
+Strategies include: One-Versus-All/Rest (OvA/OvR), OvO (One-Versus-One).
 
 In OvA, a single classifier is trained for each class, distinguishing it from all other classes.
 In OvO, a classifier is trained for every pair of classes.
@@ -55,7 +55,7 @@ class MultiClass:
             self.OvO()
 
     def predict(self, X_i: pd.Series):
-        predictions = {label: self.classifiers[label].predict(X_i, with_activation=True) for label in self.classifiers}    
+        predictions = {label: self.classifiers[label].predict(X_i, with_score=True) for label in self.classifiers}    
         return max(predictions, key=predictions.get)
 
 if __name__ == '__main__':
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     X_std = (X - means) / stds
 
     # Train OvA
-    model = MultiClass(model=Perceptron, strategy='OvA', X=X_std, y=y, epochs=500, learning_rate=1e-2)
+    model = MultiClass(model=Adaline, strategy='OvA', X=X_std, y=y, epochs=10000, learning_rate=1e-2)
     model.fit()
 
 
