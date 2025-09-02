@@ -43,7 +43,7 @@ class Perceptron:
 
             for i in range(X.shape[0]):
                 y_prediction = self.predict(X.iloc[i])
-                error = y[i] - y_prediction
+                error = y.iloc[i] - y_prediction
                 self.weights += self.learning_rate * error * X.iloc[i]
                 self.bias += self.learning_rate * error
                 self.errors.append(abs(error))
