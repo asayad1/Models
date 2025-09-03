@@ -1,85 +1,68 @@
 """
-This implements Adaline using the least mean squares (LMS) rule with a
-linear activation function. Training is done on the Iris dataset.
-
-Adaline attempts to learn a linear decision boundary between two classes by modifying its weight and bias.
-The change in weight and bias is proportional to its gradient with respect to the loss function (minimizing the loss). 
+This file implements a logistic regression classifier for binary classification tasks.
 """
 
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy as np 
+import matplotlib.pyplot as plt 
 
-class Adaline:
+class LogisticRegression:
     weights: pd.Series
     bias: float
-    epochs: int
     learning_rate: float 
+    epochs: int
 
     def __init__(self, *, learning_rate: float, epochs: int):
         self.learning_rate = learning_rate
         self.epochs = epochs
 
-    def net_input(self, *, X: np.ndarray):
+    def net_input(self, *, X: pd.Series):
         return X.dot(self.weights) + self.bias
 
     def activation(self, *, z: float):
-        return z
+        return 1 / (1 + np.exp(-z))
 
     def threshold(self, *, activation: float):
         return 1 if activation >= 0.5 else 0
 
-    def score(self, X):
-        return self.activation(z=self.net_input(X=X))
-
     def fit(self, *, X: pd.DataFrame, y: pd.Series):
         self.weights = np.full(X.shape[1], 0.01)
-        self.bias = 0.01
+        self.bias = 0
 
         for _ in range(self.epochs):
             delta_w = []
             delta_b = 0
             for X_i, y_i in zip(X.values, y):
-                # Compute net input function 
-                y_hat = self.activation(z=self.net_input(X=X_i))
-                
-                # Compute the error
-                error = y_i - y_hat
+                probability = self.activation(z=self.net_input(X=X_i))
+                error = y_i - probability
                 delta_w.append(error * X_i)
                 delta_b += error
-            
+
             # Average out the error for full batch GD
-            delta_w = [(-2 / X.shape[0] * sum(i)) for i in zip(*delta_w)]
-            delta_b = -2 / X.shape[0] * delta_b
+            delta_w = [(2 / X.shape[0] * sum(i)) for i in zip(*delta_w)]
+            delta_b = 2 / X.shape[0] * delta_b
             
-            # Apply weight updates
-            self.weights -= self.learning_rate * np.array(delta_w)
-            self.bias -= self.learning_rate * delta_b
+            self.weights += self.learning_rate * np.array(delta_w)
+            self.bias += self.learning_rate * delta_b
 
-    def predict(self, X_i: pd.Series, *, with_score: bool = False) -> float:
-        score = self.score(X=X_i)
 
-        if not with_score:
-            return self.threshold(activation=score)
-        else:
-            return (score, self.threshold(activation=score))
+    def predict(self, X_i: pd.Series):
+        return self.threshold(activation=self.activation(z=self.net_input(X=X_i)))
 
 
 if __name__ == '__main__':
+    # Load the dataset
     dataset_url = 'https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv'
     dataset = pd.read_csv(dataset_url)
 
-    # Drop rows where species == 'virginica'
-    dataset = dataset[dataset['species'] != 'virginica']
+    # Preprocess the dataset 
+    features = ['sepal_length', 'petal_length']
+    target = 'species'
+    X = dataset[features]
+    y = (dataset[target] == 'setosa').astype(int)
 
-    # Features: drop species and the other columns
-    X = dataset.drop(columns=['species', 'sepal_width', 'petal_width'], axis=1)
-
-    # Labels: 1 if setosa, 0 otherwise
-    y = (dataset['species'] == 'setosa').astype(int)
-
-    # Define the model
-    model = Adaline(learning_rate=1e-3, epochs=1000)
+    # Instantiate Logistic Regression Classifier
+    model = LogisticRegression(learning_rate=1e-2, epochs=500)
     model.fit(X=X, y=y)
 
     # Create mesh grid
@@ -108,5 +91,5 @@ if __name__ == '__main__':
 
     plt.xlabel("Sepal length [cm]")
     plt.ylabel("Petal length [cm]")
-    plt.title("Adaline Decision Regions")
+    plt.title("Logistic Regression Decision Regions")
     plt.show()

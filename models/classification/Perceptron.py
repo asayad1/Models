@@ -2,6 +2,9 @@
 This implements a classic Perceptron binary classifier using the perceptron update rule with a
 unit step activation function. Training is done on the Iris dataset. 
 
+A perceptron tries to learn a linear decision boundary between two classes by adjusting its weights bias.
+The change in weight and bias is proportional to the magntiude of the feature associated to the weight. 
+
 Training supports learning multiple weights.
 """
 
