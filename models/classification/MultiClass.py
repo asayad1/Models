@@ -12,6 +12,7 @@ import numpy as np
 from itertools import combinations
 from Perceptron import Perceptron
 from Adaline import Adaline
+from LogisticRegression import LogisticRegression
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 
@@ -112,10 +113,10 @@ if __name__ == '__main__':
     stds = X.std(ddof=0)
     X_std = (X - means) / stds
 
-    strat = 'ovo'
+    strat = 'ova'
     
     # Train multiclass
-    model = MultiClass(model=Perceptron, strategy=strat, X=X_std, y=y, epochs=1000, learning_rate=1e-2)
+    model = MultiClass(model=LogisticRegression, strategy=strat, X=X_std, y=y, epochs=15000, learning_rate=1e-2)
     model.fit()
     model.predict(X_i=pd.Series([4.6, 1.0], index=feat_cols))
 

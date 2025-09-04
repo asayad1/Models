@@ -25,6 +25,9 @@ class LogisticRegression:
     def threshold(self, *, activation: float):
         return 1 if activation >= 0.5 else 0
 
+    def score(self, X: pd.DataFrame):
+        return self.activation(z=self.net_input(X=X))
+
     def fit(self, *, X: pd.DataFrame, y: pd.Series):
         self.weights = np.full(X.shape[1], 0.01)
         self.bias = 0
@@ -46,8 +49,14 @@ class LogisticRegression:
             self.bias += self.learning_rate * delta_b
 
 
-    def predict(self, X_i: pd.Series):
-        return self.threshold(activation=self.activation(z=self.net_input(X=X_i)))
+    def predict(self, X_i: pd.Series, *, with_score: bool = False):
+        score = self.score(X=X_i)
+
+        if not with_score:
+            return self.threshold(activation=score)
+        else:
+            return (score, self.threshold(activation=score))
+    
 
 
 if __name__ == '__main__':
