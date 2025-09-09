@@ -7,4 +7,3 @@ TODO:
 - liblinear solver
 - sag solver
 - saga solver
-- Read these lecture notes on bias-variance definition: https://sebastianraschka.com/pdf/lecture-notes/stat451fs20/08-model-eval-1-intro__notes.pdf
