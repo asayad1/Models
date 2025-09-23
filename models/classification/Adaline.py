@@ -15,10 +15,14 @@ class Adaline:
     bias: float
     epochs: int
     learning_rate: float 
+    lmbda: float
+    regularization = ['l2', 'l1', 'none']
 
-    def __init__(self, *, learning_rate: float, epochs: int):
+    def __init__(self, *, learning_rate: float, epochs: int, lmbda: float = 0.0, regularization: str = 'none'):
         self.learning_rate = learning_rate
         self.epochs = epochs
+        self.lmbda = lmbda
+        self.regularization = regularization
 
     def net_input(self, *, X: np.ndarray):
         return X.dot(self.weights) + self.bias
@@ -53,6 +57,11 @@ class Adaline:
             delta_b = -2 / X.shape[0] * delta_b
             
             # Apply weight updates
+            if self.regularization == 'l1':
+                delta_w += self.lmbda * np.sign(self.weights)
+            elif self.regularization == 'l2':
+                delta_w += self.lmbda * self.weights
+                
             self.weights -= self.learning_rate * np.array(delta_w)
             self.bias -= self.learning_rate * delta_b
 

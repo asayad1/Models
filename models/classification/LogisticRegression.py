@@ -11,10 +11,14 @@ class LogisticRegression:
     bias: float
     learning_rate: float 
     epochs: int
+    lmbda: float
+    regularization = ['l2', 'l1', 'none']
 
-    def __init__(self, *, learning_rate: float, epochs: int):
+    def __init__(self, *, learning_rate: float, epochs: int, lmbda: float = 0.0, regularization: str = 'none'):
         self.learning_rate = learning_rate
         self.epochs = epochs
+        self.lmbda = lmbda
+        self.regularization = regularization
 
     def net_input(self, *, X: pd.Series):
         return X.dot(self.weights) + self.bias
@@ -35,17 +39,23 @@ class LogisticRegression:
         for _ in range(self.epochs):
             delta_w = []
             delta_b = 0
-            for X_i, y_i in zip(X.values, y):
+            for X_i, y_i in zip(X.values, y.values):
                 probability = self.activation(z=self.net_input(X=X_i))
                 error = y_i - probability
                 delta_w.append(error * X_i)
                 delta_b += error
 
             # Average out the error for full batch GD
-            delta_w = [(2 / X.shape[0] * sum(i)) for i in zip(*delta_w)]
+            delta_w = np.array([(2 / X.shape[0] * sum(i)) for i in zip(*delta_w)], dtype=float)
             delta_b = 2 / X.shape[0] * delta_b
-            
-            self.weights += self.learning_rate * np.array(delta_w)
+
+            # Apply regularization
+            if self.regularization == 'l1':
+                delta_w -= self.lmbda * np.sign(self.weights)
+            elif self.regularization == 'l2':
+                delta_w -= self.lmbda * self.weights
+
+            self.weights += self.learning_rate * delta_w
             self.bias += self.learning_rate * delta_b
 
 
@@ -57,8 +67,6 @@ class LogisticRegression:
         else:
             return (score, self.threshold(activation=score))
     
-
-
 if __name__ == '__main__':
     # Load the dataset
     dataset_url = 'https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv'
